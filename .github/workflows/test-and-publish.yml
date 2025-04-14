@@ -2,12 +2,12 @@ name: Run Tests and Publish Allure Report
 
 on:
   push:
-    branches: [master]  # or your branch
+    branches: [master]
   pull_request:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 👈 Use a stable runner
 
     steps:
       - name: Checkout code
@@ -30,14 +30,14 @@ jobs:
           npx allure generate ./allure-results --clean -o ./allure-report
 
       - name: Upload Allure Report Artifact
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v3
         with:
           name: allure-report
           path: ./allure-report
 
   deploy:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 👈 Use the same stable runner
 
     steps:
       - name: Checkout code
