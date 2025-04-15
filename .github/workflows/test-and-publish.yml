@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
 
+permissions:
+  contents: write
+
+
 jobs:
   test:
     runs-on: ubuntu-22.04
