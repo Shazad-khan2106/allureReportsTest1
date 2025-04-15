@@ -30,7 +30,7 @@ jobs:
 
       - name: Run tests
         run: |
-          npx cucumber-js --format allure-cucumberjs/reporter
+          npx cucumber-js
 
       - name: Generate Allure Report
         run: |
