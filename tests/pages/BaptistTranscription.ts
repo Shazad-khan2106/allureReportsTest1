@@ -40,13 +40,15 @@ export class BaptistTranscription {
 
   async clickMic() {
     this.world.addLog('Clicking microphone');
+    await this.page.waitForTimeout(2000)
     await this.page.click('[alt="Microphone"]'); // update selector
   }
 
   async simulateSpeech(text: string) {
-    await this.page.waitForTimeout(5000)
+    await this.page.waitForTimeout(3000)
     this.world.addLog(`Simulating speech: "${text}"`);
-    speak(text)
+    const inputSelector = '#auto-resize-textarea'; 
+    speak(this.page,text, inputSelector )
   }
 
   async verifyTranscription(originalSentence: string) {

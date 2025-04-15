@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -30,10 +30,11 @@ jobs:
           npx allure generate ./allure-results --clean -o ./allure-report
 
       - name: Upload Allure Report Artifact
-        uses: actions/upload-artifact@1a4442cac4d3658916779262731d5b162bcbc6c7
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: allure-report
           path: ./allure-report
+
 
   deploy:
     needs: test
@@ -41,16 +42,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download Allure Report
-        uses: actions/download-artifact@8c5da544112eb8e579a6c9d7b4b9e3e8bdf1efcd
+        uses: actions/download-artifact@v4
         with:
           name: allure-report
           path: ./allure-report
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
