@@ -1,1 +1,1 @@
-{"uid":"98d3104e051c652961429bf95fa0b5d6","children":[{"name":"Baptist trascription check","uid":"3fe62fd1952016c2","parentUid":"98d3104e051c652961429bf95fa0b5d6","status":"passed","time":{"start":1744725789959,"stop":1744725798732,"duration":8773},"flaky":false,"newFailed":false,"newPassed":false,"newBroken":false,"retriesCount":0,"retriesStatusChange":false,"parameters":[],"tags":[]}],"name":"suites"}
+{"uid":"98d3104e051c652961429bf95fa0b5d6","children":[],"name":"suites"}
