@@ -5,7 +5,7 @@ module.exports = {
         'support/*.ts'
       ],
       requireModule: ['ts-node/register'],
-      format: ['@shelex/cucumberjs-allure2-reporter', 'progress'],
+      format: ['allure-cucumberjs/reporter', 'progress'],
       paths: ['tests/features/*.feature'],
     },
   };
