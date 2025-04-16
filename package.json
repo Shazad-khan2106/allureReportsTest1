@@ -5,7 +5,8 @@
   "scripts": {
     "test": "cucumber-js --format json:report/cucumber_report.json",
     "report": "node generate-report.js",
-    "screenshot": "node capture-screenshot.js"
+    "screenshot": "node capture-screenshot.js",
+    "inject-timeline": "node timeline-injector.js"
   },
   "keywords": [],
   "author": "",

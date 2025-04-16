@@ -37,6 +37,10 @@ jobs:
       - name: Generate Custom HTML Report
         if: always()
         run: node generate-report.js || echo "REPORT_FAILED=true" >> $GITHUB_ENV
+      
+      - name: Inject Timeline Chart
+        if: always()
+        run: npm run inject-timeline
 
       - name: Take Screenshot of Report
         if: always()
