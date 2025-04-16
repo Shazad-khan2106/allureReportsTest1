@@ -1,6 +1,6 @@
-Feature: Validating Baptist Transcription
+Feature: Validating Chatbot Functionality
 
-  Scenario: Baptist trascription check
+  Scenario: Chatbot Functionality check
     Given I open the baptist login page
     When I enter "username" and "password"
     Then I should see the homepage
