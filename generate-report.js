@@ -38,7 +38,11 @@ reporter.generate({
       { label: 'Release', value: '1.0.0' },
       { label: 'Cycle', value: 'B11221.34321' },
       { label: 'Execution Start Time', value: new Date().toLocaleString() },
-      { label: 'Execution End Time', value: new Date().toLocaleString() }
+      { label: 'Execution End Time', value: new Date().toLocaleString() },
+      { label: 'Executed By', value: process.env.GITHUB_ACTOR },
+      { label: 'Branch', value: process.env.GITHUB_REF_NAME },
+      { label: 'Commit', value: process.env.GITHUB_SHA.substring(0, 7) },
+      { label: 'Environment', value: 'Dev' },
     ]
   },
   pageTitle: 'Baptist Health : South Florida',

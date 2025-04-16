@@ -6,6 +6,10 @@ body {
 h1, h2, h3 {
   color: #333;
 }
+.main_container {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
 .navbar-custom {
   display: flex;
   align-items: center;
@@ -15,6 +19,7 @@ h1, h2, h3 {
   width: 100%;
   border-bottom: 1px solid #ccc;
   background-color: #f2f2f2;
+  background: linear-gradient(to right, #047857, #0f766e);
 }
 
 .navbar-left,
