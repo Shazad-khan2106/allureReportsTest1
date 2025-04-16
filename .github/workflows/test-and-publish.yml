@@ -98,7 +98,7 @@ jobs:
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: |
             🧪 Test Report - ${{ github.repository }} - Status: ${{ needs.test.outputs.test_status }}
-          to: shazadkhan14614361436@gmail.com
+          to: ruchitha.sai@techolution.com
           from: GitHub CI <${{ secrets.EMAIL_USERNAME }}>
           body: |
             Hello Team,
