@@ -11,6 +11,8 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-22.04
+    outputs:
+      test_status: ${{ steps.set_status.outputs.status }}
 
     steps:
       - name: Checkout code
@@ -28,29 +30,46 @@ jobs:
         run: npx playwright install
 
       - name: Run Cucumber Tests
-        run: npm run test
+        id: run_tests
+        run: |
+          npm run test || echo "TEST_FAILED=true" >> $GITHUB_ENV
 
-      - name: Generate HTML Report
-        run: npm run report
+      - name: Generate Custom HTML Report
+        if: always()
+        run: node generate-report.js || echo "REPORT_FAILED=true" >> $GITHUB_ENV
 
-      - name: Upload HTML Report Artifact
+      - name: Take Screenshot of Report
+        if: always()
+        run: |
+          npm install puppeteer
+          node capture-screenshot.js || echo "SCREENSHOT_FAILED=true" >> $GITHUB_ENV
+
+      - name: Upload Report and Screenshot
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: html-report
-          path: ./html-report
+          name: html-report-assets
+          path: |
+            ./html-report
+            ./report-screenshot.png
+
+      - name: Set Job Status
+        id: set_status
+        if: always()
+        run: echo "status=${{ job.status }}" >> $GITHUB_OUTPUT
 
   deploy:
     needs: test
+    if: ${{ needs.test.outputs.test_status == 'success' }}
     runs-on: ubuntu-22.04
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download HTML Report
+      - name: Download Report Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: html-report
+          name: html-report-assets
           path: ./html-report
 
       - name: Deploy to GitHub Pages
@@ -58,3 +77,40 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./html-report
+
+  notify:
+    needs: [test, deploy]
+    if: always()
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download Report Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: html-report-assets
+          path: ./html-report
+
+      - name: Send Result Email
+        uses: dawidd6/action-send-mail@v4
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: |
+            🧪 Test Report - ${{ github.repository }} - Status: ${{ needs.test.outputs.test_status }}
+          to: shazadkhan14614361436@gmail.com
+          from: GitHub CI <${{ secrets.EMAIL_USERNAME }}>
+          body: |
+            Hello Team,
+
+            The test run for `${{ github.repository }}` has **${{ needs.test.outputs.test_status }}**.
+
+            ✅ Trigger: "${{ github.event.head_commit.message }}"
+
+            🔗 Report (if deployed): https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+
+            📸 Screenshot attached (if generated successfully).
+
+            Regards,  
+            GitHub CI Bot
+          attachments: ./html-report/report-screenshot.png
