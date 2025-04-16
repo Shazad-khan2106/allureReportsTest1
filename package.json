@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "cucumber-js",
-    "allure:generate": "npx allure generate ./allure-results --clean -o ./allure-report"
-  },
+  "test": "cucumber-js --format json:report/cucumber_report.json",
+  "report": "node generate-report.js",
+  "test:report": "npm run test && npm run report"
+}
+,
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -14,8 +16,7 @@
     "@cucumber/cucumber": "^11.2.0",
     "@playwright/test": "^1.51.1",
     "@types/node": "^22.14.0",
-    "allure-commandline": "^2.33.0",
-    "allure-cucumberjs": "^3.2.1",
+    "multiple-cucumber-html-reporter": "^3.9.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
