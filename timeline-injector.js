@@ -1,24 +1,30 @@
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
-const reportPath = path.join(process.cwd(), 'html-report', 'index.html');
-const jsonReport = JSON.parse(fs.readFileSync('report/cucumber_report.json', 'utf-8'));
+// Paths
+const reportPath = path.join(__dirname, 'html-report', 'index.html');
+const reportJsonPath = path.join(__dirname, 'report', 'cucumber_report.json');
 
+// Read JSON report
+const jsonReport = JSON.parse(fs.readFileSync(reportJsonPath, 'utf-8'));
+
+// Extract scenario durations
 const timelineData = [];
 
 jsonReport.forEach(feature => {
-  feature.elements.forEach(scenario => {
-    const start = new Date(scenario.start_timestamp || Date.now());
-    const durationMs = scenario.steps?.reduce((acc, s) => acc + (s.result?.duration || 0), 0) / 1e6;
+  (feature.elements || []).forEach(scenario => {
+    const durationMs = (scenario.steps || []).reduce((acc, step) => {
+      return acc + ((step.result && step.result.duration) || 0);
+    }, 0) / 1e6;
+
     timelineData.push({
       label: scenario.name,
-      startTime: start.toLocaleTimeString(),
-      duration: durationMs.toFixed(2),
+      duration: durationMs.toFixed(2)
     });
   });
 });
 
-// Chart JS snippet
+// Build Chart.js injection
 const chartScript = `
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <canvas id="timelineChart" style="width:100%;max-height:300px;margin-bottom:2rem;"></canvas>
@@ -31,7 +37,7 @@ const chartScript = `
       datasets: [{
         label: 'Test Duration (ms)',
         data: ${JSON.stringify(timelineData.map(t => parseFloat(t.duration)))},
-        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+        backgroundColor: 'rgba(75, 192, 192, 0.6)'
       }]
     },
     options: {
@@ -48,9 +54,13 @@ const chartScript = `
   });
 </script>`;
 
-// Inject into HTML
+// Inject Chart before feature overview
 let html = fs.readFileSync(reportPath, 'utf-8');
-html = html.replace('<div class="features-overview">', `${chartScript}<div class="features-overview">`);
-fs.writeFileSync(reportPath, html);
-
-console.log('📊 Timeline chart injected into report');
+const insertionPoint = '<div class="features-overview">';
+if (html.includes(insertionPoint)) {
+  html = html.replace(insertionPoint, chartScript + insertionPoint);
+  fs.writeFileSync(reportPath, html);
+  console.log('📊 Timeline chart injected into HTML report.');
+} else {
+  console.warn('⚠️ Could not find injection point in index.html.');
+}
