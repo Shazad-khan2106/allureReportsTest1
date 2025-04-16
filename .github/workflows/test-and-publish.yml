@@ -70,13 +70,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: html-report-assets
-          path: .
+          path: html-report
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: ./html-report
 
   notify:
     needs: [test, deploy]
@@ -87,7 +87,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: html-report-assets
-          path: .
+          path: html-report
 
       - name: Send Result Email
         uses: dawidd6/action-send-mail@v4
@@ -113,4 +113,4 @@ jobs:
 
             Regards,  
             GitHub CI Bot
-          attachments: ./report-screenshot.png
+          attachments: ./html-report/report-screenshot.png
