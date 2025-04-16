@@ -70,13 +70,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: html-report-assets
-          path: ./html-report
+          path: .
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./html-report
+          publish_dir: .
 
   notify:
     needs: [test, deploy]
@@ -87,7 +87,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: html-report-assets
-          path: ./html-report
+          path: .
 
       - name: Send Result Email
         uses: dawidd6/action-send-mail@v4
@@ -98,7 +98,7 @@ jobs:
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: |
             🧪 Test Report - ${{ github.repository }} - Status: ${{ needs.test.outputs.test_status }}
-          to: ruchitha.sai@techolution.com
+          to: ${{ secrets.EMAIL_TO }}
           from: GitHub CI <${{ secrets.EMAIL_USERNAME }}>
           body: |
             Hello Team,
@@ -113,4 +113,4 @@ jobs:
 
             Regards,  
             GitHub CI Bot
-          attachments: ./html-report/report-screenshot.png
+          attachments: ./report-screenshot.png
