@@ -1,6 +1,7 @@
 body {
   font-family: 'Segoe UI', sans-serif;
   background-color: #ffffff;
+  font-size: 11px;
 }
 
 h1, h2, h3 {
@@ -9,6 +10,9 @@ h1, h2, h3 {
 .main_container {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+.fixed_height_320 {
+  height: 375px;
 }
 .navbar-custom {
   display: flex;
@@ -19,7 +23,7 @@ h1, h2, h3 {
   width: 100%;
   border-bottom: 1px solid #ccc;
   background-color: #f2f2f2;
-  background: linear-gradient(to right, #047857, #0f766e);
+  background: linear-gradient(to right, #87bdae52, #1abb9cbd);
 }
 
 .navbar-left,
