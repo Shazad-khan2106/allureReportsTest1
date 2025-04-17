@@ -5,8 +5,13 @@ import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { isFuzzyMatch } from './fuzzyMatch';
 
-const ffmpegPath = path.resolve(__dirname, '../../tools/ffmpeg.exe');
-ffmpeg.setFfmpegPath(ffmpegPath);
+// Handle ffmpeg path based on environment
+if (process.env.CI !== 'true') {
+  const ffmpegPath = path.resolve(__dirname, '../../tools/ffmpeg.exe');
+  ffmpeg.setFfmpegPath(ffmpegPath);
+} else {
+  ffmpeg.setFfmpegPath('ffmpeg'); // Use system ffmpeg in CI
+}
 
 export async function streamAudioToBot(
   page: any,
@@ -83,10 +88,11 @@ function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number 
       ws.send(JSON.stringify({ start_audio: true }));
       console.log('▶️ Sent start_audio');
 
-      const ffplayPath = ffmpegPath.replace('ffmpeg.exe', 'ffplay.exe');
-      const playCmd = `"${ffplayPath}" -f s16le -ar 16000 -autoexit -nodisp -acodec pcm_s16le "${pcmPath}"`;
-
+      // Only play audio locally
       if (process.env.CI !== 'true') {
+        const ffplayPath = path.resolve(__dirname, '../../tools/ffplay.exe');
+        const playCmd = `"${ffplayPath}" -f s16le -ar 16000 -autoexit -nodisp -acodec pcm_s16le "${pcmPath}"`;
+
         exec(playCmd, (error) => {
           if (error) {
             console.error('❌ Audio playback failed:', error.message);
@@ -97,7 +103,6 @@ function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number 
       } else {
         console.log('⏭️ Skipping audio playback in CI environment.');
       }
-      
 
       const stream = fs.createReadStream(pcmPath, { highWaterMark: chunkSize });
 
