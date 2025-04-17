@@ -32,7 +32,7 @@ jobs:
       - name: Run Cucumber Tests
         id: run_tests
         env:
-        CI: true
+          CI: true
         run: |
           npm run test || echo "TEST_FAILED=true" >> $GITHUB_ENV
 
