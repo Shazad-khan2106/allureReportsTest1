@@ -6,8 +6,9 @@ import { exec } from 'child_process';
 import { isFuzzyMatch } from './fuzzyMatch';
 
 // Handle ffmpeg path based on environment
+let ffmpegPath = '';
 if (process.env.CI !== 'true') {
-  const ffmpegPath = path.resolve(__dirname, '../../tools/ffmpeg.exe');
+  ffmpegPath = path.resolve(__dirname, '../../tools/ffmpeg.exe');
   ffmpeg.setFfmpegPath(ffmpegPath);
 } else {
   ffmpeg.setFfmpegPath('ffmpeg'); // Use system ffmpeg in CI
@@ -26,33 +27,19 @@ export async function streamAudioToBot(
   await convertMp3ToPcm(mp3Path, pcmPath);
   console.log('✅ PCM conversion completed');
 
-  await sendPcmOverWebSocket(pcmPath, wsUrl, 2000);
+  const finalTranscript = await sendPcmOverWebSocket(pcmPath, wsUrl, 2000);
 
-  console.log('⏳ Waiting for transcription response...');
+  console.log('⏳ Waiting for transcription UI to update...');
   await page.waitForTimeout(3000);
 
-  const maxRetries = 20;
-  const retryDelay = 500;
-  let captured = '';
+  console.log('🧠 Final transcript from WebSocket:', finalTranscript);
 
-  for (let i = 0; i < maxRetries; i++) {
-    const inputText = await page.$eval('#auto-resize-textarea', (el: HTMLInputElement) => el.value).catch(() => '');
-    const pText = await page.$eval('.min-w-fit p', (el: HTMLElement) => el.textContent?.trim() || '').catch(() => '');
-
-    captured = inputText || pText;
-
-    console.log(`📝 [Try ${i + 1}] Captured text: "${captured}"`);
-
-    if (isFuzzyMatch(captured, expectedMessage, 0.7)) {
-      console.log('✅ AI captured message (fuzzy match succeeded).');
-      return;
-    }
-
-    await new Promise((r) => setTimeout(r, retryDelay));
+  if (!isFuzzyMatch(finalTranscript, expectedMessage, 0.7)) {
+    console.warn('⚠️ AI did not capture message accurately. Filling manually.');
+    await page.fill('#auto-resize-textarea', expectedMessage);
+  } else {
+    console.log('✅ Transcript matched expected text!');
   }
-
-  console.warn('⚠️ AI did not capture message accurately enough, filling manually.');
-  await page.fill('#auto-resize-textarea', expectedMessage);
 }
 
 function convertMp3ToPcm(mp3Path: string, pcmPath: string): Promise<void> {
@@ -74,10 +61,11 @@ function convertMp3ToPcm(mp3Path: string, pcmPath: string): Promise<void> {
   });
 }
 
-function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number = 2000): Promise<void> {
+function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number = 3000): Promise<string> {
   return new Promise((resolve, reject) => {
     console.log(`🌐 Connecting to WebSocket: ${wsUrl}`);
     const ws = new WebSocket(wsUrl);
+    let finalTranscript = '';
 
     ws.on('open', () => {
       console.log('🔗 WebSocket connection established');
@@ -88,7 +76,6 @@ function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number 
       ws.send(JSON.stringify({ start_audio: true }));
       console.log('▶️ Sent start_audio');
 
-      // Only play audio locally
       if (process.env.CI !== 'true') {
         const ffplayPath = path.resolve(__dirname, '../../tools/ffplay.exe');
         const playCmd = `"${ffplayPath}" -f s16le -ar 16000 -autoexit -nodisp -acodec pcm_s16le "${pcmPath}"`;
@@ -120,8 +107,8 @@ function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number 
         setTimeout(() => {
           console.log('🔒 Closing WebSocket after post-audio wait...');
           ws.close();
-          resolve();
-        }, 2000);
+          resolve(finalTranscript); // return the captured text
+        }, 5000);
       });
 
       stream.on('error', (err) => {
@@ -131,7 +118,15 @@ function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number 
     });
 
     ws.on('message', (data) => {
-      console.log('📩 Message from server:', data.toString());
+      try {
+        const msg = JSON.parse(data.toString());
+        if (msg.transcription) {
+          finalTranscript = msg.transcription;
+          console.log('📩 Transcription update:', finalTranscript);
+        }
+      } catch {
+        // skip non-JSON binary messages
+      }
     });
 
     ws.on('error', (err) => {
@@ -140,7 +135,7 @@ function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number 
     });
 
     ws.on('close', (code, reason) => {
-      console.log(`🔒 WebSocket closed (code: ${code}, reason: ${reason || 'No reason provided'})`);
+      console.log(`🔒 WebSocket closed (code: ${code}, reason: ${reason || 'No reason'})`);
     });
   });
 }
