@@ -27,7 +27,9 @@ Then('I click on the chatbot', async function (this: CustomWorld) {
 });
 
 Then('I click on the mic icon', async function (this: CustomWorld) {
-  await this.baptistPage.clickMic();
+  await this.baptistPage.getWebSocketURL()
+  await this.baptistPage.clickOnMicIcon();
+
 });
 
 Then('I speak {string}', async function (this: CustomWorld, speechText: string) {

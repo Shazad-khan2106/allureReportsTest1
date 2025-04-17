@@ -8,7 +8,7 @@ const iPhone = devices['iPhone 12'];
 setDefaultTimeout(30 * 1000);
 
 Before(async function (this: CustomWorld) {
-  this.browser = await chromium.launch({ headless: true });
+  this.browser = await chromium.launch({ headless: false });
 
   const context = await this.browser.newContext({
     ...iPhone,
