@@ -4,6 +4,10 @@ import { WebSocket } from 'ws';
 import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { isFuzzyMatch } from './fuzzyMatch';
+let finalTranscript = '';
+let lastMessageTimestamp = Date.now();
+let closeTimeout: NodeJS.Timeout;
+
 
 // Handle ffmpeg path based on environment
 let ffmpegPath = '';
@@ -62,7 +66,11 @@ function convertMp3ToPcm(mp3Path: string, pcmPath: string): Promise<void> {
 }
 
 function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number = 3000): Promise<string> {
-  return new Promise((resolve, reject) => {
+    let finalTranscript = '';
+    let lastMessageTimestamp = Date.now();
+    let closeTimeout: NodeJS.Timeout;    
+  
+    return new Promise((resolve, reject) => {
     console.log(`🌐 Connecting to WebSocket: ${wsUrl}`);
     const ws = new WebSocket(wsUrl);
     let finalTranscript = '';
@@ -104,11 +112,28 @@ function sendPcmOverWebSocket(pcmPath: string, wsUrl: string, chunkSize: number 
         ws.send(JSON.stringify({ stop_audio: true }));
         console.log('✅ Sent stop_audio');
 
-        setTimeout(() => {
-          console.log('🔒 Closing WebSocket after post-audio wait...');
-          ws.close();
-          resolve(finalTranscript); // return the captured text
-        }, 5000);
+        ws.on('message', (data) => {
+            try {
+              const msg = JSON.parse(data.toString());
+              if (msg.transcription) {
+                finalTranscript = msg.transcription;
+                lastMessageTimestamp = Date.now();
+                console.log('📩 Transcription update:', finalTranscript);
+          
+                // Restart inactivity timer
+                if (closeTimeout) clearTimeout(closeTimeout);
+                closeTimeout = setTimeout(() => {
+                  console.log('🕒 No new messages for 3s. Closing WebSocket...');
+                  ws.close();
+                  resolve(finalTranscript);
+                }, 3000);
+              }
+            } catch (e) {
+              // Non-JSON message or binary chunk — ignore
+            }
+          });
+          
+          
       });
 
       stream.on('error', (err) => {
